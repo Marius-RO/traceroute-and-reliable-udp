@@ -23,13 +23,27 @@ def compara_endianness(numar):
     print ("Little Endian: ", [bin(byte) for byte in struct.pack('<H', numar)])
 
 
-def create_header_emitator(seq_nr, checksum, flags='S'):
+def create_header_emitator(seq_nr, checksum, flags):
     '''
     TODO: folosind struct.pack impachetati numerele in octeti si returnati valorile
     flags pot fi 'S', 'P', sau 'F'
     '''
-    octeti = struct.pack(..)
-    return octeti
+
+    if flags == 'S':
+    # inseamna ca am trimis S
+        spf = 0b100
+    if flags == 'P':
+    # inseamna ca am trimis P
+        spf = 0b010
+    if flags == 'F':
+    # inseamna ca am trimis F
+        spf = 0b001
+
+    spf_zero = spf << 13 # muta cei trei biti cu 13 pozitii la stanga
+    # L+H+H = 4+2+2 = 8
+    header = struct.pack('!LHH', seq_nr, checksum, spf_zero)
+
+    return header
 
 
 def parse_header_emitator(octeti):
@@ -37,17 +51,13 @@ def parse_header_emitator(octeti):
     TODO: folosind struct.unpack despachetati numerele 
     din headerul de la emitator in valori si returnati valorile
     '''
-    seq_nr, checksum, spf = struct.unpack(..)
-    flags = ''
-    if spf & 0b100:
-        # inseamna ca am primit S
-        flags = 'S'
-    elif spf & 0b001:
-        # inseamna ca am primit F
-        flags = 'F'
-    elif spf & 0b010:
-        # inseamna ca am primit P
-        flags = 'P'
+
+    header = octeti[:8]
+    seq_nr, checksum, spf_zero = struct.unpack('!LHH', header)
+
+    # eliminam cele 13 zerouri de padding
+    flags = spf_zero >> 13
+
     return (seq_nr, checksum, flags)
 
 
@@ -56,7 +66,8 @@ def create_header_receptor(ack_nr, checksum, window):
     TODO: folosind struct.pack impachetati numerele in octeti si returnati valorile
     flags pot fi 'S', 'P', sau 'F'
     '''
-    octeti = struct.pack(..)
+
+    octeti = struct.pack('!LHH', ack_nr, checksum, window)
     return octeti
 
 
@@ -64,8 +75,17 @@ def parse_header_receptor(octeti):
     '''
     TODO: folosind struct.unpack despachetati octetii in valori si returnati valorile
     '''
-    ack_nr, checksum, window = struct.unpack(..)
+    ack_nr, checksum, window = struct.unpack('!LHH', octeti)
     return (ack_nr, checksum, window)
+
+def extrage_segmente(file_descriptor):
+    # extrag toate segmentele de 1400 de octeti din fisier
+    while True:
+        segment = file_descriptor.read(MAX_SEGMENT)
+        if segment:
+            yield segment
+        else:
+            break
 
 
 def citeste_segment(file_descriptor):
@@ -77,16 +97,23 @@ def citeste_segment(file_descriptor):
 
 def exemplu_citire(cale_catre_fisier):
     with open(cale_catre_fisier, 'rb') as file_in:
-        for segment in citeste_segment(file_in):
+        segmente = extrage_segmente(file_in)
+        for segment in segmente:
             print(segment)
 
 
 def calculeaza_checksum(octeti):
+
     checksum = 0
+
+    #if len(octeti) % 2 == 1: # Adaugam un octet la final
+        #octeti += struct.pack('B', 0)
 
     # 1. convertim sirul octeti in numere pe 16 biti
     # 2. adunam numerele in complementul lui 1, ce depaseste 16 biti se aduna la coada
     # 3. cheksum = complementarea bitilor sumei
+
+
     return checksum
 
 

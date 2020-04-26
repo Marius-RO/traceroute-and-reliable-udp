@@ -44,7 +44,7 @@ def traceroute(ip, port):
             if byte != b'\x0b':
                 break
 
-            #TODO: de rezolvat problema cu socket timeout  
+            # TODO: de rezolvat problema cu socket timeout  
 
         except Exception as e:
             print("Socket timeout ", str(e))
@@ -56,15 +56,15 @@ def ip_random(): # generam un ip_fake pt a 'pacali' ipinfo
     return  "79." + str(random.randrange(0,255)) + "." + str(random.randrange(0,255)) + "." + str(random.randrange(0,255))
 
 
-#lista_ips = traceroute("74.125.31.139", 80)
-#for index, ip in enumerate(lista_ips):
-    #print(index, " ", ip)
+lista_ips = traceroute("74.125.31.139", 80)
+for index, ip in enumerate(lista_ips):
+    print(index, " ", ip)
 
 
 # cele 3 ip uri pt care cautam rutele
 ip_uri_de_cautat = ['74.125.31.139' # google.com
                     ] 
-
+'''
 for ip_cautat in ip_uri_de_cautat:
     print("Ruta ip-ului ",ip_cautat," este:")
     #lista_ips = traceroute(ip_cautat, 80)
@@ -86,3 +86,4 @@ for ip_cautat in ip_uri_de_cautat:
         else:
             print (f"{idx}: {raspuns.json()['ip']} - {raspuns.json()['city']}, {raspuns.json()['region']}, {raspuns.json()['country']}")
 
+'''
