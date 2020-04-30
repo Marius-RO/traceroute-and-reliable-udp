@@ -68,61 +68,6 @@ def finalize(sock, adresa_receptor, seq_nr):
     return 0  
 
 
-def send(sock, adresa_receptor, seq_nr, window, segment):
-    '''
-    Functie care trimite octeti ca payload catre receptor
-    cu seq_nr dat ca parametru.
-    Returneaza ack_nr si window curent primit de la server.
-    '''
-    # TODO...
-    checksum = 0
-    octeti_header_fara_checksum = create_header_emitator(seq_nr, checksum, "P")
-
-    mesaj = octeti_header_fara_checksum + segment
-
-    #checksum = calculeaza_checksum(mesaj)
-    #octeti_header_cu_checksum = create_header_emitator(seq_nr, checksum, "P")
-    # mesaj = octeti_header_cu_checksum + segment
-
-    #logging.info(f"\nAm trimis cererea de conectare cu flagul S catre {adresa_receptor}")
-
-    
-    global SEG
-    logging.info(f"Incerc trimitere segmentului {SEG}")
-    for i in range(NR_MAX_INCERCARI):
-        
-        # incerc trimiterea segmentului
-        try:
-            sock.sendto(mesaj, adresa_receptor)
-            data, receptor = sock.recvfrom(MTU)
-        except socket.timeout as e:
-            logging.info("Timeout la connect segment, retrying...")
-            continue # TODO: cat timp nu primește confirmare de connect, incearca din nou
-
-
-        # in acest moment cerera a fost trimisa si s-a primit raspuns de la receptor
-        #logging.info(f"Cererea de conectare cu flagul S a fost primita de {adresa_receptor}")
-        logging.info(f"Header cerere: [seq_nr: {seq_nr}] , [check:  {checksum}] , [flag: P]")
-
-        # if verifica_checksum(data) is False:
-        #     #daca checksum nu e ok, mesajul de la receptor trebuie ignorat
-        #     return -1, -1
-
-        ack_nr, checksum, window = parse_header_receptor(data)
-
-        if ack_nr == seq_nr + len(segment): # am primit confirmarea potrivita
-            logging.info(f"Header receptor primit: [ack_nr: {ack_nr}] , [check:  {checksum}] , [window: {window}]")
-            logging.info(f"Am trimis segmentul {SEG} cu succes")
-            SEG += 1
-            return ack_nr, window
-     
-    else: # nu s-a reusit trimiterea dupa un nr de NR_MAX_INCERCARI retransmisii
-        logging.info(f"Receptorul {adresa_receptor} nu a raspuns dupa {NR_MAX_INCERCARI} incercari de conectare.")
-        logging.info("Trimiterea pachetelor va fi reluata")
-        return -1, window
-        #exit(0)
-
-
 def send_segment(sock, adresa_receptor, seq_nr, window, segment, idx_segment):
     
     # checksum = calculeaza_checksum(segment)
