@@ -1,10 +1,15 @@
 import struct
 import socket
 import logging
+import sys
 
 MAX_UINT32 = 0xFFFFFFFF
 MAX_BITI_CHECKSUM = 16
 MAX_SEGMENT = 1400
+MTU = 1500
+TIMEOUT_FEREASTRA = 3
+TIMEOUT_RECVFROM = 1
+NR_MAX_INCERCARI = 20 # incercari de confirmari
 
 def compara_endianness(numar):
     '''
@@ -80,19 +85,16 @@ def parse_header_receptor(octeti):
 
 def extrage_segmente(file_descriptor):
     # extrag toate segmentele de 1400 de octeti din fisier
+    segmente = []
     while True:
         segment = file_descriptor.read(MAX_SEGMENT)
         if segment:
-            yield segment
+            #yield segment
+            segmente.append(segment)
         else:
             break
 
-
-def citeste_segment(file_descriptor):
-    '''
-        generator, returneaza cate un segment de 1400 de octeti dintr-un fisier
-    '''
-    yield file_descriptor.read(MAX_SEGMENT)
+    return segmente    
 
 
 def exemplu_citire(cale_catre_fisier):

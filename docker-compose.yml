@@ -33,7 +33,7 @@ services:
               ipv4_address: 198.8.0.1
         sysctls:
           - net.ipv4.ip_forward=1
-        #command: /drop_packages.sh
+        command: /drop_packages.sh
     emitator:
         image: snisioi/tema3_2020
         volumes:
