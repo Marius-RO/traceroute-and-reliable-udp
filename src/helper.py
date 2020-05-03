@@ -7,7 +7,7 @@ MAX_UINT32 = 0xFFFFFFFF
 MAX_BITI_CHECKSUM = 16
 MAX_SEGMENT = 1400
 MTU = 1500
-TIMEOUT_FEREASTRA = 3
+TIMEOUT_FEREASTRA = 1
 TIMEOUT_RECVFROM = 1
 NR_MAX_INCERCARI = 20 # incercari de confirmari
 
@@ -27,6 +27,17 @@ def compara_endianness(numar):
     print ("Network Order (Big Endian): ", [bin(byte) for byte in struct.pack('!H', numar)])
     print ("Little Endian: ", [bin(byte) for byte in struct.pack('<H', numar)])
 
+
+def flags_to_char(flags):
+    if flags & 0b100:
+        # S-a primit S
+        return 'S'
+    if flags & 0b001:
+        # S-a primit F
+        return 'F'
+    elif flags & 0b010:
+        # S-a primit P
+        return 'P'
 
 def create_header_emitator(seq_nr, checksum, flags):
     '''
