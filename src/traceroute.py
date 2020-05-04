@@ -10,7 +10,7 @@ udp_send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, proto=socket.IP
 # socket RAW de citire a răspunsurilor ICMP
 icmp_recv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
 # setam timout in cazul in care socketul ICMP la apelul recvfrom nu primeste nimic in buffer
-icmp_recv_socket.settimeout(3)
+icmp_recv_socket.settimeout(1)
 
 def traceroute(ip, port):
     # setam TTL in headerul de IP pentru socketul de UDP
@@ -19,7 +19,7 @@ def traceroute(ip, port):
 
     while True:
         TTL += 1  # crestem TTL pana ce ajungem la ip ul final
-        print(TTL)
+        print("TTL=", TTL)
         udp_send_sock.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, TTL)
         
         # trimite un mesaj UDP catre un tuplu (IP, port) 
@@ -56,19 +56,22 @@ def ip_random(): # generam un ip_fake pt a 'pacali' ipinfo
     return  "79." + str(random.randrange(0,255)) + "." + str(random.randrange(0,255)) + "." + str(random.randrange(0,255))
 
 
-lista_ips = traceroute("74.125.31.139", 80)
-for index, ip in enumerate(lista_ips):
-    print(index, " ", ip)
+# lista_ips = traceroute("74.125.31.139", 80)
+# for index, ip in enumerate(lista_ips):
+#     print(index, " ", ip)
 
 
 # cele 3 ip uri pt care cautam rutele
-ip_uri_de_cautat = ['74.125.31.139' # google.com
+ip_uri_de_cautat = [
+                    '54.252.93.212', # australia
+                    '203.200.48.2', # india
+                    '128.1.77.42' # china
                     ] 
-'''
+
 for ip_cautat in ip_uri_de_cautat:
-    print("Ruta ip-ului ",ip_cautat," este:")
-    #lista_ips = traceroute(ip_cautat, 80)
-    lista_ips = ['10.220.138.141','10.220.154.110','72.14.237.248','209.85.142.96']
+    print("Ruta ip-ului ", ip_cautat," este:")
+    lista_ips = traceroute(ip_cautat, 55482)
+    # lista_ips = ['10.220.138.141','10.220.154.110','72.14.237.248','209.85.142.96']
     for idx,ip in enumerate(lista_ips): # afisam ruta
         ip_fake = ip_random() # genarm un ip fake si il adaugam la header
 
@@ -86,4 +89,3 @@ for ip_cautat in ip_uri_de_cautat:
         else:
             print (f"{idx}: {raspuns.json()['ip']} - {raspuns.json()['city']}, {raspuns.json()['region']}, {raspuns.json()['country']}")
 
-'''
