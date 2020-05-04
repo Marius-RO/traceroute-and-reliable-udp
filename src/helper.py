@@ -115,23 +115,43 @@ def exemplu_citire(cale_catre_fisier):
             print(segment)
 
 
+def complement(num):
+    c = 1
+ 
+    while num*2 > c:
+        num = num ^ c
+        c = c << 1
+ 
+    return num
+
 def calculeaza_checksum(octeti):
 
     checksum = 0
 
-    #if len(octeti) % 2 == 1: # Adaugam un octet la final
-        #octeti += struct.pack('B', 0)
+    if len(octeti) % 2 == 1:
+        # Adaugam '\0' in cazul in care sirul este de lungime impara
+        octeti += b'\0'
+      
+    # Despachetam in bucati de cate 2 bytes
+    bucati = struct.unpack('!%dH' % (len(octeti)//2), octeti)
 
-    # 1. convertim sirul octeti in numere pe 16 biti
-    # 2. adunam numerele in complementul lui 1, ce depaseste 16 biti se aduna la coada
-    # 3. cheksum = complementarea bitilor sumei
+    # Este variabila din python, nu este pe 2 bytes
+    checksum = 0
+    for i in range(len(bucati)):
+        # Facem suma bucatilor
+        checksum += bucati[i]
 
+    # Convertim numarul la un unsigned short
+    # Ar rezulta numarul de dupa overflow 65535 (restul impartirii la 65535)
+    checksum = checksum % 65535
 
+    # Calculam complementul sumei
+    checksum = complement(checksum)
     return checksum
 
 
 def verifica_checksum(octeti):
-    if calculeaza_checksum(octeti):
+    if calculeaza_checksum(octeti) == 0:
         return True
     return False
 
