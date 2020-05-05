@@ -144,9 +144,6 @@ def main():
 
 if __name__ == '__main__':
     main()
-    # NUME_FISIER_PRIMIT = 'text.txt'
-    # NUME_FISIER_TRIMIS = 'fisier_primit.txt'
-    # if filecmp.cmp(NUME_FISIER_PRIMIT, NUME_FISIER_TRIMIS):
-    #     logging.info("Fisierul este integru. :)")
+
 
 
