@@ -382,6 +382,7 @@ Obs 4: Daca mai avem de trimis 3 segmente si primim un window de 5 atunci se vor
 Este la fel ca pasul de conectare cu deosebirea ca flagul trimis este `F` in loc de `S` cu urmatoarele observatii:
 - cand receptorul primeste flagul `F` va scrie datele primite in fiser si verifica daca fisierul trimis a ajuns integru
 - este posibil ca datorita packet loss in momentul finalizarii daca receptorul a primit cerea de finalizare si a trimis cele `NR_MAX_INCERCARI` confirmari emitatorul sa nu primeasca nici una din acele confirmari. Acest comportament nu afecteaza salvarea datelor deoarece in momentul in care receptorul primeste primul mesaj de finalizare acesta trimite confirmarile catre emitator dupa care salveaza datele, verifica integritatea fisierului trimis si isi incheie executia.
+- daca receptorul nu primeste nici una din cele `NR_MAX_INCERCARI` cereri de finalizare de la emitator nu va fi salvat nimic in fisier, deci va fi necesara reluarea transferului
 
 
 ### Emițător - mesaje de logging
