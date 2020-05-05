@@ -249,11 +249,11 @@ Am trimis imaginea img_trimisa.jpg de 141 kb catre receptor care a salvat imagin
 
 ## 1. Conectarea emitator - receptor:
 
-Initial emitatorul trimite un mesaj de cerere de conectare catre receptor (avand flagul "S") si asteapta sa primeasca confirmarea de la acesta. Datorita packet loss mare incercam sa retrimitem mesajul de confirmare de `NR_MAX_INCERCARI` ori (este setat cu 20) iar daca nu primim o confirmare dupa `NR_MAX_INCERCARI` programul se va inchide. 
+Initial emitatorul trimite un mesaj de cerere de conectare catre receptor (avand flagul `S`) si asteapta sa primeasca confirmarea de la acesta. Datorita packet loss mare incercam sa retrimitem mesajul de confirmare de `NR_MAX_INCERCARI` ori (este setat cu 20) iar daca nu primim o confirmare dupa `NR_MAX_INCERCARI` programul se va inchide. 
 
-De asemenea, tot datorita packet loss, pentru fiecare mesaj primit, receptorul trimite `NR_MAX_INCERCARI` mesaje de confirmare catre emitator. Pentru a se incheia conectarea initiala este necesar ca emitatorul sa receptioneze o singura confirmare.
+De asemenea, tot datorita packet loss, pentru fiecare mesaj primit, receptorul trimite `NR_MAX_INCERCARI` mesaje de confirmare catre emitator. Pentru a se incheia conectarea initala este necesar ca emitatorul sa receptioneze o singura confirmare.
 
-Modalitatea de trimitere a mesajelor de conectare catre receptor este blocanta (trimitem mesajul si asteptam TIMEOUT secunde dupa o confirmare de la receptor).
+Modalitatea de trimitere a mesajelor de conectare catre receptor este blocanta (trimitem mesajul si asteptam `TIMEOUT` secunde dupa o confirmare de la receptor).
 
 ## **Explicatii pe logul din emitator**
 
@@ -262,7 +262,7 @@ Modalitatea de trimitere a mesajelor de conectare catre receptor este blocanta (
 ```
 [LINE:39]# INFO     [2020-05-05 10:18:52,412]  Am trimis cererea de conectare cu flagul S catre ('198.8.0.2', 10000)
 ```
-### **Nu s-a primit raspuns dupa TIMEOUT secunde => se retrimite iar cerearea**
+### **Nu s-a primit raspuns dupa `TIMEOUT` secunde => se retrimite cerearea**
 ```
 [LINE:48]# INFO     [2020-05-05 10:18:53,414]  Timeout la connect flag S, retrying...
 [LINE:48]# INFO     [2020-05-05 10:18:54,417]  Timeout la connect flag S, retrying...
@@ -273,20 +273,22 @@ Modalitatea de trimitere a mesajelor de conectare catre receptor este blocanta (
 [LINE:48]# INFO     [2020-05-05 10:18:59,426]  Timeout la connect flag S, retrying...
 [LINE:48]# INFO     [2020-05-05 10:19:00,428]  Timeout la connect flag S, retrying...
 ```
-### **S-a receptionat un raspuns raspuns dupa 9 incercari**
+### **S-a receptionat un raspuns dupa 9 incercari**
 ```
 [LINE:51]# INFO     [2020-05-05 10:19:00,430]  Header cerere trimisa: [seq_nr: 104414] , [check:  7520] , [flag: S]
 [LINE:55]# INFO     [2020-05-05 10:19:00,430]  Cererea de conectare cu flagul S a fost primita de ('198.8.0.2', 10000)
 [LINE:56]# INFO     [2020-05-05 10:19:00,430]  Header receptor primit: [ack_nr: 104415] , [check:  26650] , [window: 5]
 [LINE:57]# INFO     [2020-05-05 10:19:00,431]  S-a realizat conexiunea
 ```
-In acest moment s-a realizat conexiunea si avem o fereastra initiala primita cu valoarea 5.
+### In acest moment s-a realizat conexiunea si avem o fereastra initala primita cu valoarea 5.
 
-Golim bufferul de confirmarile ce mai trebuie sa ajunga de la receptor (pentru ca receptorul trimite pentru fiecare mesaj primit cate `NR_MAX_INCERCARI` de confirmari exista sanse mari ca dupa ce a primit prima confirmare sa mai vina si altele, astfel ca golim bufferul pentru a trece la urmatoarea etapa cu bufferul gol).
+### Golim bufferul de confirmarile ce mai trebuie sa ajunga de la receptor (pentru ca receptorul trimite pentru fiecare mesaj primit cate `NR_MAX_INCERCARI` de confirmari exista sanse mari ca dupa ce a primit prima confirmare sa mai vina si altele, astfel ca golim bufferul pentru a trece la urmatoarea etapa cu bufferul gol).
+
 ```
 [LINE:152]# INFO     [2020-05-05 10:19:00,431]  Buffer golit
-
 ```
+
+
 
 ## **Explicatii pe logul din receptor**
 
@@ -295,8 +297,7 @@ Golim bufferul de confirmarile ce mai trebuie sa ajunga de la receptor (pentru c
 [LINE:83]# INFO     [2020-05-05 10:18:49,524]  Asteptam mesaje...
 ```
 
-Receptorul a primit mesajul de solicitare a conexiunii de la emitator si trimite `NR_MAX_INCERCARI` de confirmari pentru acest mesaj
-
+### **Receptorul a primit mesajul de solicitare a conexiunii de la emitator si trimite `NR_MAX_INCERCARI` de confirmari pentru acest mesaj**
 ```
 [LINE:85]# INFO     [2020-05-05 10:19:00,429]  Am primit 23 octeti de la ('172.8.0.2', 60924)
 [LINE:91]# INFO     [2020-05-05 10:19:00,429]  Header emitator primit: [seq_nr: 104414] , [check:  7520] , [flag: S]
@@ -306,20 +307,22 @@ Receptorul a primit mesajul de solicitare a conexiunii de la emitator si trimite
 [LINE:45]# INFO     [2020-05-05 10:19:00,431]  S-au trimis 20 confirmari
 ```
 
-## 2. Trimiterea segmentelor (sliding window - Go Back N)
+## 2. Trimiterea segmentelor (Sliding window - Go Back N)
 
 Modul in care functioneaza implementarea noastra este urmatorul:
 - extragem toate segmentele din imaginea trimisa (pentru aceasta rulare au fost 101 segmente de maxim 1400 bytes)
 - preluam marimea ferestrei (generat random de receptor) din headerul primit cand s-a realizat confirmarea de conectare (pentru aceasta rulare dimensiunea initiala a ferestrei este 5)
 - parcurgem segmentele de la inceputul ferestrei pana la finalul ferestrei si le trimitem pe toate fara a astepta dupa confirmare
 ( le trimitem doar daca nu au fost confirmate -> este posibil sa fi fost confirmate anterior daca aceasta este o retransmisie a ferestrei)
--  asteptam TIMEOUT secunde pentru a prelua confirmarile primite (simulam timeout ul ferestrei)
+-  asteptam `TIMEOUT` secunde pentru a prelua confirmarile primite (simulam timeout ul ferestrei)
 - dupa ce am preluat confirmarile primite verificam care segmente au fost confirmate (dintre cele trimise) si mutam fereastra spre dreapta cu numarul de segmente confirmate consecutiv din stanga.
+
+
 
 
 ## **Explicatii pe logul din emitator**
 
-## **Initial fereastra are dimensiunea 5 (numarul primit de la receptor prin confirmarea conexiunii) => se trimite fereastra 0 - 4 => se trimit segmentele 0,1,2,3,4**
+## Initial fereastra are dimensiunea 5 (numarul primit de la receptor in confirmarea conexiunii) => se trimite fereastra 0 - 4 => se trimit segmentele 0,1,2,3,4
 ```
 [LINE:223]# INFO     [2020-05-05 10:19:00,432]  Se transmite fereastra 0 - 4
 [LINE:224]# INFO     [2020-05-05 10:19:00,433]  Mai sunt 101 segmente de trimis pana la final
@@ -330,9 +333,9 @@ Modul in care functioneaza implementarea noastra este urmatorul:
 [LINE:136]# INFO     [2020-05-05 10:19:00,434]  Header segment 3 trimis: [seq_nr: 194989] , [check:  10225] , [flag: P]
 [LINE:136]# INFO     [2020-05-05 10:19:00,435]  Header segment 4 trimis: [seq_nr: 196390] , [check:  15701] , [flag: P]
 ```
-Se asteapta `TIMEOUT` secunde (se simuleaza timeout-ul ferestrei) dupa care se preiau toate confirmarile primite pentru segmentele trimise anterior. Obs: Fiecare confirmare se salveaza o singura data in lista de confirmari.
+### Se asteapta `TIMEOUT` secunde (se simuleaza timeout-ul ferestrei) dupa care se preiau toate confirmarile primite pentru segmentele trimise anterior. Obs: Fiecare confirmare se salveaza o singura data in lista de confirmari.
 
-Pentru aceasta prima transmisie s-a primit o singura confirmare distincta, iar aceasta este pentru segmentul 0 ==> fiind segmentul cel mai din stanga fereastra va avansa cu o unitate. Dar in acelasi timp s-a primit si o noua valoare pentru fereastra (valoarea 2). In aceasta situatie noua fereastra ce va fi trimisa la urmatoarea iteratie este 1 - 2. 
+### Pentru aceasta prima transmisie s-a primit o singura confirmare distincta, iar aceasta este pentru segmentul 0 ==> fiind segmentul cel mai din stanga fereastra va avansa cu o unitate. Dar in acelasi timp s-a primit si o noua valoare pentru fereastra (valoarea 2). In aceasta situatie noua fereastra ce va fi trimisa la urmatoarea iteratie este 1 - 2. 
 
 
 ```
@@ -359,13 +362,13 @@ Pentru aceasta prima transmisie s-a primit o singura confirmare distincta, iar a
 
 ### Acest proces se reia pana se primesc confirmari pentru toate segmentele.
 
-Obs 1: In caz ca in exemplul anterior in loc de confirmarea pentru segmentul 0 se primea confirmarea pentru segmentul 4 (sa presupunem ca noua dimensiune care vine pentru fereastra este tot **`2`**), atunci fereastra nu va mai avansa (pentru ca segementul cel mai din stanga nu a fost confirmat) dar isi va schimba dimensiunea **`(noua fereastra va fi 0 - 1)`**. La urmatoarea iteratie s-ar fi retransmis segmentele **`0,1`**. Totusi segmentul 4 care a fost confirmat nu va mai fi trimis ulterior (atunci cand va fi incadrat intr-o fereastra corespunzatoare) pentru ca in momentul in care a fost marcat ca fiind confirmat nici un segement nu va mai fi retransmis(deci orice segemnt confirmat de receptor va fi sarit la o retransmisie ulterioara). 
+**Obs 1**: In caz ca in exemplul anterior in loc de confirmarea pentru segmentul 0 se primea confirmarea pentru segmentul 4 (sa presupunem ca noua dimensiune care vine pentru fereastra este tot **`2`**), atunci fereastra nu va mai avansa (pentru ca segementul cel mai din stanga nu a fost confirmat) dar isi va schimba dimensiunea **`(noua fereastra va fi 0 - 1)`**. La urmatoarea iteratie s-ar fi retransmis segmentele **`0,1`**. Totusi segmentul 4 care a fost confirmat nu va mai fi trimis ulterior (atunci cand va fi incadrat intr-o fereastra corespunzatoare) pentru ca in momentul in care a fost marcat ca fiind confirmat nici un segement nu va mai fi retransmis(deci orice segemnt confirmat de receptor va fi sarit la o retransmisie ulterioara). 
 
-Obs 2: In caz ca in exemplul anterior in loc de confirmarea pentru segmentul 0 se primea confirmarea pentru segmentul 4 (sa presupunem ca noua dimensiune care vine pentru fereastra este **`7`**), atunci fereastra nu va mai avansa (pentru ca segementul cel mai din stanga nu a fost confirmat) dar isi va schimba dimensiunea **`(noua fereastra va fi 0 - 6)`**. La urmatoarea iteratie s-ar fi retransmis segmentele **`0,1,2,3,5,6`** (segmentul 4 care a fost confirmat nu va mai fi trimis pentru ca a fost confirmat deja).
+**Obs 2**: In caz ca in exemplul anterior in loc de confirmarea pentru segmentul 0 se primea confirmarea pentru segmentul 4 (sa presupunem ca noua dimensiune care vine pentru fereastra este **`7`**), atunci fereastra nu va mai avansa (pentru ca segementul cel mai din stanga nu a fost confirmat) dar isi va schimba dimensiunea **`(noua fereastra va fi 0 - 6)`**. La urmatoarea iteratie s-ar fi retransmis segmentele **`0,1,2,3,5,6`** (segmentul 4 care a fost confirmat nu va mai fi trimis pentru ca a fost confirmat deja).
 
-Obs 3: In caz ca in exemplul anterior in loc de confirmarea pentru segmentul 0 se primeau confirmari pentru segmentele 1,2,3,4 (sa presupunem ca noua dimensiune care vine pentru fereastra este **`3`**), atunci fereastra nu va mai avansa (pentru ca segementul cel mai din stanga nu a fost confirmat) dar isi va schimba dimensiunea **`(noua fereastra va fi 0 - 2)`**. La urmatoarea iteratie s-ar fi retransmis segmentul **`0`** (segmentele 1,2 care au fost confirmate nu vor mai fi trimise pentru ca au fost confirmate deja). Prespunem ca la urmatoarea iteratie cand se trimite fereastra 0 - 2 (doar segmentul 0 in acest caz) am primi confirmarea pentru segmentul 0 si o noua dimensiune a ferestrei de 5 atunci urmatoarea fereastra ar fi 5 - 9 (Explicatie: Fereastra curenta este 0 - 2 => s-a trimis segmentul 0 => s-a primit confirmare pentru segmentul 0 => stim ca aveam confirmare si pentru segmentele 1,2 anterior trimise => noua fereastra ar fi 3 - 7 => dar stim ca in fereastra 3 - 7 avem confirmari pentru 3,4 => noua fereastra care va fi rulata la urmatoarea iteratie va fi 5 - 9).
+**Obs 3**: In caz ca in exemplul anterior in loc de confirmarea pentru segmentul 0 se primeau confirmari pentru segmentele 1,2,3,4 (sa presupunem ca noua dimensiune care vine pentru fereastra este **`3`**), atunci fereastra nu va mai avansa (pentru ca segementul cel mai din stanga nu a fost confirmat) dar isi va schimba dimensiunea **`(noua fereastra va fi 0 - 2)`**. La urmatoarea iteratie s-ar fi retransmis segmentul **`0`** (segmentele 1,2 care au fost confirmate nu vor mai fi trimise pentru ca au fost confirmate deja). Prespunem ca la urmatoarea iteratie cand se trimite fereastra **`0 - 2`** (doar segmentul 0 in acest caz) am primi confirmarea pentru segmentul 0 si o noua dimensiune a ferestrei de **`5`** atunci urmatoarea fereastra ar fi **`5 - 9`** (Explicatie: Fereastra curenta este **`0 - 2`** => s-a trimis segmentul 0 => s-a primit confirmare pentru segmentul 0 => stim ca aveam confirmare si pentru segmentele **`1,2`** anterior trimise => noua fereastra ar fi **`3 - 7`** => dar stim ca in fereastra **`3 - 7`** avem confirmari pentru **`3,4`** => noua fereastra care va fi rulata la urmatoarea iteratie va fi **`5 - 9`**).
 
-Obs 4: Daca mai avem de trimis 3 segmente si primim un window de 5 atunci se vor trimite doar acele 3 segmente, deci o fereastra mai mare decat numarul de segmente neconfirmate nu afecteaza functionalitatea programului.
+**Obs 4**: Daca mai avem de trimis **`3`** segmente si primim un window de **`5`** atunci se vor trimite doar acele **`3`** segmente, deci o fereastra mai mare decat numarul de segmente neconfirmate nu afecteaza functionalitatea programului.
 
 
 - Modalitatea prin care verificam daca un segment a fost confirmat este sa verificam daca ack number-ul si checksum-ul sunt cele asteptate.
@@ -373,7 +376,9 @@ Obs 4: Daca mai avem de trimis 3 segmente si primim un window de 5 atunci se vor
 
 ## **Explicatii pentru functionalitatea receptorului**
 
-- Receptorul primeste mesajul => ii verifica checksum-ul => daca checksum-ul este corect (trebuie sa dea 0 in urma reaplicarii algoritmului de checksum) atunci continua si trimite cele `NR_MAX_INCERCARI` de confirmari catre emitator cu ack = seq_nr + len(payload) , altfel va ignora pachetul si il va astepta pe urmatorul.
+- Receptorul primeste mesajul => ii verifica checksum-ul => daca checksum-ul este corect (trebuie sa dea 0 in urma reaplicarii algoritmului de checksum) atunci continua si trimite cele `NR_MAX_INCERCARI` de confirmari catre emitator cu `ack = seq_nr + len(payload)`, altfel va ignora pachetul si il va astepta pe urmatorul.
+
+
 
 
 ## 2. Finalizarea emitator - receptor
