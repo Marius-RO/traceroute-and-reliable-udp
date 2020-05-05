@@ -9,7 +9,7 @@ MAX_SEGMENT = 1400
 MTU = 1500
 TIMEOUT_FEREASTRA = 1
 TIMEOUT_RECVFROM = 1
-NR_MAX_INCERCARI = 20 # incercari de confirmari
+NR_MAX_INCERCARI = 20 # nr de confirmari trimise de receptor pentru fiecare pachet primit de la emitator
 
 def compara_endianness(numar):
     '''

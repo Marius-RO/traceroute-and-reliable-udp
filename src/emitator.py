@@ -193,12 +193,20 @@ def trimite_segmente(sock, adresa_receptor, segmente, window):
 
     # generez seq number de start pt trimiterea pachetelor
     seq_nr = random.randint(0, 200000)
+
+    # generarea seq nr pentru fiecare segment si construirea unei liste cu aceste valori
+    lista_seq_nr = []
+    tmp_seq = seq_nr
+
+    for segment in segmente:
+        lista_seq_nr.append(tmp_seq)
+        tmp_seq += len(segment)
     
+
     # indecsi pentru gestionarea ferestrelor si ale segmentelor
     idx_start_fereastra = 0
     idx_final_fereastra = window - 1
     idx_segment_start = 0
-    seq_nr_segment_start = seq_nr
     cnt_segmente = 0
     nr_segmente = len(segmente)
 
@@ -210,6 +218,7 @@ def trimite_segmente(sock, adresa_receptor, segmente, window):
 
     # voi salva indecsii pentru segmentele confirmate de receptor
     lista_idx_segmente_confirmate = []
+
 
     while True:
         # Din while se iese doar daca s-au primit confirmarile pentru toate segmentele
@@ -231,25 +240,24 @@ def trimite_segmente(sock, adresa_receptor, segmente, window):
                 # setam noul segment de start din fereastra (dupa el o sa se decida avansarea ferestrei catre dreapta)
                 if i == idx_start_fereastra:
                     idx_segment_start = cnt_segmente
-                    seq_nr = seq_nr_segment_start
                 
                 # verific daca segmentul nu fost deja trimis si confirmat de receptor
                 # poate fi un sgement intermediar care la o iteratie anterioara a fost trimis
                 # (se face retransmisia doar pt pachetele care nu au fost confirmate)
                 if cnt_segmente in lista_idx_segmente_confirmate:
-                    seq_nr += len(segmente[cnt_segmente])
                     cnt_segmente += 1
                     continue    
 
                 # daca nu a fost confirmat il trimit / retrimit
                 segment = segmente[cnt_segmente]
+                seq_nr = lista_seq_nr[cnt_segmente]
+
                 send_segment(sock, adresa_receptor, seq_nr, window, segment, cnt_segmente)
 
                 # salvez detalii (idx_segment, seq_nr_trimis, ack_nr_asteptat) despre segmentul trimis
                 lista_info_segmente_trimise_fereastra.append((cnt_segmente,seq_nr,seq_nr + len(segment)))
 
-                # incrementez noile valori
-                seq_nr += len(segment) + 1
+                # incrementez valoarea pentru urmatorul segment
                 cnt_segmente += 1
             else:
                 # Nu are sens sa avansam pt ca am depasit numarul de segment
@@ -303,10 +311,7 @@ def trimite_segmente(sock, adresa_receptor, segmente, window):
 
                 # si daca mai pot trece la urmatorul index (daca nu s-au terminat segmentele)
                 if idx_segment_start + 1 < nr_segmente:
-                    # actualizez noul seq_start
-                    seq_nr_segment_start += len(segmente[idx_segment_start])
-
-                    # si trec la urmatorul segment
+                    # trec la urmatorul segment
                     idx_segment_start += 1
 
                 else: # toate segmentele au fost trimise si confirmate
@@ -321,9 +326,6 @@ def trimite_segmente(sock, adresa_receptor, segmente, window):
                 idx_start_fereastra += nr_confirmari_consecutive
                 idx_final_fereastra += nr_confirmari_consecutive
                 cnt_segmente = idx_segment_start
-
-                # si revin la seq_nr de la inceputul trimiterii segementelor din fereastra
-                seq_nr = seq_nr_segment_start
 
                 break        
         

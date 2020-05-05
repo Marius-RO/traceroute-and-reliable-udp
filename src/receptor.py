@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 import logging
 import random
 import filecmp
+import time
 
 logging.basicConfig(format = u'[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s', level = logging.NOTSET)
 
@@ -115,6 +116,7 @@ def main():
                     break
             if exista_seq is False:
                 lista_segmente.append((seq_nr, data[8:]))
+
         
         if flag == 'F':
         # S-a primit semnalul de finalizare.
@@ -128,6 +130,7 @@ def main():
     # Sortam lista dupa seq_number
     lista_segmente = sorted(lista_segmente, key=lambda x: x[0])
     file_descriptor = open(fisier, "wb+")
+
     # Scriem segmentele in fisier
     for segment in lista_segmente:
         file_descriptor.write(segment[1])
