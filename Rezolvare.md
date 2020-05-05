@@ -251,7 +251,7 @@ Am trimis imaginea img_trimisa.jpg de 141 kb catre receptor care a salvat imagin
 
 Initial emitatorul trimite un mesaj de cerere de conectare catre receptor (avand flagul "S") si asteapta sa primeasca confirmarea de la acesta. Datorita packet loss mare incercam sa retrimitem mesajul de confirmare de `NR_MAX_INCERCARI` ori (este setat cu 20) iar daca nu primim o confirmare dupa `NR_MAX_INCERCARI` programul se va inchide. 
 
-De asemenea, tot datorita packet loss, pentru fiecare mesaj primit, receptorul trimite `NR_MAX_INCERCARI` mesaje de confirmare catre emitator. Pentru a se incheia conectarea initala este necesar ca emitatorul sa receptioneze o singura confirmare.
+De asemenea, tot datorita packet loss, pentru fiecare mesaj primit, receptorul trimite `NR_MAX_INCERCARI` mesaje de confirmare catre emitator. Pentru a se incheia conectarea initiala este necesar ca emitatorul sa receptioneze o singura confirmare.
 
 Modalitatea de trimitere a mesajelor de conectare catre receptor este blocanta (trimitem mesajul si asteptam TIMEOUT secunde dupa o confirmare de la receptor).
 
@@ -280,9 +280,9 @@ Modalitatea de trimitere a mesajelor de conectare catre receptor este blocanta (
 [LINE:56]# INFO     [2020-05-05 10:19:00,430]  Header receptor primit: [ack_nr: 104415] , [check:  26650] , [window: 5]
 [LINE:57]# INFO     [2020-05-05 10:19:00,431]  S-a realizat conexiunea
 ```
-### In acest moment s-a realizat conexiunea si avem o fereastra initala primita cu valoarea 5.
+In acest moment s-a realizat conexiunea si avem o fereastra initiala primita cu valoarea 5.
 
-### Golim bufferul de confirmarile ce mai trebuie sa ajunga de la receptor (pentru ca receptorul trimite pentru fiecare mesaj primit cate `NR_MAX_INCERCARI` de confirmari exista sanse mari ca dupa ce a primit prima confirmare sa mai vina si altele, astfel ca golim bufferul pentru a trece la urmatoarea etapa cu bufferul gol).
+Golim bufferul de confirmarile ce mai trebuie sa ajunga de la receptor (pentru ca receptorul trimite pentru fiecare mesaj primit cate `NR_MAX_INCERCARI` de confirmari exista sanse mari ca dupa ce a primit prima confirmare sa mai vina si altele, astfel ca golim bufferul pentru a trece la urmatoarea etapa cu bufferul gol).
 ```
 [LINE:152]# INFO     [2020-05-05 10:19:00,431]  Buffer golit
 
@@ -295,7 +295,8 @@ Modalitatea de trimitere a mesajelor de conectare catre receptor este blocanta (
 [LINE:83]# INFO     [2020-05-05 10:18:49,524]  Asteptam mesaje...
 ```
 
-### **Receptorul a primit mesajul de solicitare a conexiunii de la emitator si trimite `NR_MAX_INCERCARI` de confirmari pentru acest mesaj**
+Receptorul a primit mesajul de solicitare a conexiunii de la emitator si trimite `NR_MAX_INCERCARI` de confirmari pentru acest mesaj
+
 ```
 [LINE:85]# INFO     [2020-05-05 10:19:00,429]  Am primit 23 octeti de la ('172.8.0.2', 60924)
 [LINE:91]# INFO     [2020-05-05 10:19:00,429]  Header emitator primit: [seq_nr: 104414] , [check:  7520] , [flag: S]
@@ -329,9 +330,9 @@ Modul in care functioneaza implementarea noastra este urmatorul:
 [LINE:136]# INFO     [2020-05-05 10:19:00,434]  Header segment 3 trimis: [seq_nr: 194989] , [check:  10225] , [flag: P]
 [LINE:136]# INFO     [2020-05-05 10:19:00,435]  Header segment 4 trimis: [seq_nr: 196390] , [check:  15701] , [flag: P]
 ```
-### **Se asteapta `TIMEOUT` secunde (se simuleaza timeout-ul ferestrei) dupa care se preiau toate confirmarile primite pentru segmentele trimise anterior. Obs: Fiecare confirmare se salveaza o singura data in lista de confirmari.**
+Se asteapta `TIMEOUT` secunde (se simuleaza timeout-ul ferestrei) dupa care se preiau toate confirmarile primite pentru segmentele trimise anterior. Obs: Fiecare confirmare se salveaza o singura data in lista de confirmari.
 
-### **Pentru aceasta prima transmisie s-a primit o singura confirmare distincta, iar aceasta este pentru segmentul 0 ==> fiind segmentul cel mai din stanga fereastra va avansa cu o unitate. Dar in acelasi timp s-a primit si o noua valoare pentru fereastra (valoarea 2). In aceasta situatie noua fereastra ce va fi trimisa la urmatoarea iteratie este 1 - 2. **
+Pentru aceasta prima transmisie s-a primit o singura confirmare distincta, iar aceasta este pentru segmentul 0 ==> fiind segmentul cel mai din stanga fereastra va avansa cu o unitate. Dar in acelasi timp s-a primit si o noua valoare pentru fereastra (valoarea 2). In aceasta situatie noua fereastra ce va fi trimisa la urmatoarea iteratie este 1 - 2. 
 
 
 ```
@@ -356,7 +357,7 @@ Modul in care functioneaza implementarea noastra este urmatorul:
 [LINE:331]# INFO     [2020-05-05 10:19:02,445]  Fereastra a avansat cu 1 pozitii.
 ```
 
-## **Acest proces se reia pana se primesc confirmari pentru toate segmentele.**
+### Acest proces se reia pana se primesc confirmari pentru toate segmentele.
 
 Obs 1: In caz ca in exemplul anterior in loc de confirmarea pentru segmentul 0 se primea confirmarea pentru segmentul 4 (sa presupunem ca noua dimensiune care vine pentru fereastra este tot **`2`**), atunci fereastra nu va mai avansa (pentru ca segementul cel mai din stanga nu a fost confirmat) dar isi va schimba dimensiunea **`(noua fereastra va fi 0 - 1)`**. La urmatoarea iteratie s-ar fi retransmis segmentele **`0,1`**. Totusi segmentul 4 care a fost confirmat nu va mai fi trimis ulterior (atunci cand va fi incadrat intr-o fereastra corespunzatoare) pentru ca in momentul in care a fost marcat ca fiind confirmat nici un segement nu va mai fi retransmis(deci orice segemnt confirmat de receptor va fi sarit la o retransmisie ulterioara). 
 
